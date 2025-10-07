@@ -1,7 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
-
-namespace AutoService2
+﻿namespace AutoService2
 {
+    using Microsoft.Extensions.Logging;
+    using Microsoft.EntityFrameworkCore;
+    using AutoService2.Services;
+    using AutoService2.Data;
+    using AutoService2.Data.Repositories;
+    using AutoService2.Models;
+
     public static class MauiProgram
     {
         public static MauiApp CreateMauiApp()
@@ -16,12 +21,45 @@ namespace AutoService2
 
             builder.Services.AddMauiBlazorWebView();
 
+            // Регистриране на DbContext
+            builder.Services.AddDbContext<AutoServiceDbContext>(options =>
+            {
+                var dbPath = Path.Combine(FileSystem.AppDataDirectory, "autoservice.db");
+                options.UseSqlite($"Filename={dbPath}");
+            });
+
+            // Регистриране на repositories
+            builder.Services.AddScoped<VehicleRepository>();
+            builder.Services.AddScoped<CustomerRepository>();
+            builder.Services.AddScoped<WorkOrderRepository>();
+            builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            builder.Services.AddScoped<Repository<Part>>();
+            builder.Services.AddScoped<Repository<Appointment>>();
+            builder.Services.AddScoped<Repository<Invoice>>();
+            builder.Services.AddScoped<Repository<Settings>>();
+
+            // Регистриране на сервизи
+            builder.Services.AddScoped<DashboardService>();
+            builder.Services.AddScoped<VehicleService>();
+            builder.Services.AddScoped<CustomerService>();
+            builder.Services.AddScoped<WorkOrderService>();
+
 #if DEBUG
     		builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
 #endif
 
-            return builder.Build();
+            var app = builder.Build();
+
+            // Инициализирай базата данни
+            Task.Run(async () =>
+            {
+                using var scope = app.Services.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<AutoServiceDbContext>();
+                await DatabaseInitializer.InitializeAsync(context);
+            }).Wait();
+
+            return app;
         }
     }
 }
