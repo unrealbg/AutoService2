@@ -37,12 +37,17 @@
             builder.Services.AddScoped<Repository<Appointment>>();
             builder.Services.AddScoped<Repository<Invoice>>();
             builder.Services.AddScoped<Repository<Settings>>();
+            builder.Services.AddScoped<Repository<ServiceType>>();
+            builder.Services.AddScoped<Repository<MaintenanceSchedule>>();
+            builder.Services.AddScoped<Repository<DiagnosticReport>>();
 
             // Регистриране на сервизи
             builder.Services.AddScoped<DashboardService>();
             builder.Services.AddScoped<VehicleService>();
             builder.Services.AddScoped<CustomerService>();
             builder.Services.AddScoped<WorkOrderService>();
+            builder.Services.AddScoped<ServiceTypeService>();
+            builder.Services.AddScoped<MaintenanceService>();
 
 #if DEBUG
     		builder.Services.AddBlazorWebViewDeveloperTools();
